@@ -87,6 +87,7 @@ aclient = client()
 tree = app_commands.CommandTree(aclient)
 
 @tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "generate", description="Brings up generation prompt")
+@app_commands.checks.has_permissions()
 async def generate(interaction: discord.Interaction):
     await interaction.response.send_modal(addkey())
 
