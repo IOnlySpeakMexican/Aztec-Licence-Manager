@@ -61,20 +61,6 @@ class claimkey(ui.Modal, title="Licence Redemption"):
             embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found```")
             await interaction.response.send_message(embed=embed)
 
-class expire(ui.Modal, title="Licence Expiry"):
-    key = ui.TextInput(label="Licence", style=discord.TextStyle.short, placeholder="Licence key to be checked", required = True, max_length=50)
-    async def on_submit(self, interaction: discord.Interaction):
-        resule = cur.execute(f"SELECT * FROM Users WHERE Users.Licence = '{self.key}'")
-        data = cur.fetchone()
-        if data:
-            embed = discord.Embed(title="Howl Licence Manager", description="```Successfully Found Licence Key```")
-            embed.add_field(name="Expire Date", value=f"``{data[3]}``", inline=True)
-            embed.add_field(name="Role", value=f"``<@{data[1]}>``", inline=True)
-            await interaction.response.send_message(embed=embed)
-        else:
-            embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found```")
-            await interaction.response.send_message(embed=embed)
-
 
 @tasks.loop(seconds=10.0)
 async def license_check():
@@ -110,8 +96,16 @@ async def redeem(interaction: discord.Interaction):
 
 @tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "expiration", description="Brings up expiration prompt")
 async def expiration(interaction: discord.Interaction):
-    await interaction.response.send_modal(expire())
-
+        resule = cur.execute(f"SELECT * FROM Users WHERE Users.User = '{interaction.user.id}'")
+        data = cur.fetchone()
+        if data:
+            embed = discord.Embed(title="Howl Licence Manager", description="```Successfully Found Licence Key```")
+            embed.add_field(name="Expire Date", value=f"``{data[3]}``", inline=True)
+            embed.add_field(name="Role", value=f"``<@{data[1]}>``", inline=True)
+            await interaction.response.send_message(embed=embed)
+        else:
+            embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found For You```")
+            await interaction.response.send_message(embed=embed)
 
 
 aclient.run("")
