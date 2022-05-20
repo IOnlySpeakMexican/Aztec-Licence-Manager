@@ -22,7 +22,7 @@ class client(discord.Client):
     async def on_ready(self):
         await self.wait_until_ready()
         if not self.synced:
-            await tree.sync(guild = discord.Object(id=884257488201981962))
+            await tree.sync(guild = discord.Object(id=YOUSERVERIDHERE))
             self.synced = True
         print("Logged on")
         license_check.start()
@@ -58,14 +58,30 @@ class claimkey(ui.Modal, title="Licence Redemption"):
             embed.add_field(name="Role", value=f"``<@{data[2]}>``", inline=True)
             await interaction.response.send_message(embed=embed)
         else:
-            print("Not Found")
+            embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found```")
+            await interaction.response.send_message(embed=embed)
+
+class expire(ui.Modal, title="Licence Expiry"):
+    key = ui.TextInput(label="Licence", style=discord.TextStyle.short, placeholder="Licence key to be checked", required = True, max_length=50)
+    async def on_submit(self, interaction: discord.Interaction):
+        resule = cur.execute(f"SELECT * FROM Users WHERE Users.Licence = '{self.key}'")
+        data = cur.fetchone()
+        if data:
+            embed = discord.Embed(title="Howl Licence Manager", description="```Successfully Found Licence Key```")
+            embed.add_field(name="Expire Date", value=f"``{data[3]}``", inline=True)
+            embed.add_field(name="Role", value=f"``<@{data[1]}>``", inline=True)
+            await interaction.response.send_message(embed=embed)
+        else:
+            embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found```")
+            await interaction.response.send_message(embed=embed)
+
 
 @tasks.loop(seconds=10.0)
 async def license_check():
     cur.execute(f"SELECT * FROM Users WHERE Users.Expires = '{datetime.date.today()}'")
     res = cur.fetchone()
     if res:
-        guild = aclient.get_guild(884257488201981962)
+        guild = aclient.get_guild(YOUSERVERIDHERE)
         member = guild.get_member(int(res[1]))
         print(res[2])
         role = get(guild.roles, id=int(res[2]))
@@ -84,12 +100,21 @@ async def license_check():
 aclient = client()
 tree = app_commands.CommandTree(aclient)
 
-@tree.command(guild = discord.Object(id=884257488201981962), name = "generate", description="Brings up generation prompt")
+@tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "generate", description="Brings up generation prompt")
 async def generate(interaction: discord.Interaction):
     await interaction.response.send_modal(addkey())
 
-@tree.command(guild = discord.Object(id=884257488201981962), name = "redeem", description="Brings up redmeption prompt")
+@tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "redeem", description="Brings up redmeption prompt")
 async def redeem(interaction: discord.Interaction):
     await interaction.response.send_modal(claimkey())
 
+@tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "expiration", description="Brings up expiration prompt")
+async def expiration(interaction: discord.Interaction):
+    await interaction.response.send_modal(expire())
+
+
+
 aclient.run("")
+
+
+
