@@ -1,10 +1,7 @@
 import discord
-from discord import  Guild, Interaction, Role, ui, app_commands
+from discord import app_commands
 from datetime import datetime
-import requests
-import secrets
 import sqlite3
-import datetime
 from discord.ext import commands, tasks
 import discord
 from datetime import *
@@ -52,7 +49,12 @@ async def license_check():
         connection.commit()
         guild = aclient.get_guild(int(data["ServerID"]))
         member = guild.get_member(int(res[1]))
+        channel = await member.create_dm()
         role = get(guild.roles, id=int(res[3]))
+        embed = discord.Embed(title="Aztec Licence Handler", description="Your License Has **Ended**", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await channel.send(embed=embed)
         await member.remove_roles(role)
         print("Removed User: " + res[0])
     else:
@@ -75,10 +77,10 @@ async def slash3(interaction: discord.Interaction, plan: str, amount: int, rolei
         embed = discord.Embed(title="Aztec Licence Handler", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
-        embed.add_field(name="Plan", value=plan, inline=True)
-        embed.add_field(name="Amount", value=amount, inline=True)
-        embed.add_field(name="Role ID", value=roleid, inline=True)
-        embed.add_field(name="Time", value=time, inline=True)
+        embed.add_field(name="Plan", value=f"''{plan}''", inline=True)
+        embed.add_field(name="Amount", value=f"''{amount}''", inline=True)
+        embed.add_field(name="Role ID", value=f"''{roleid}''", inline=True)
+        embed.add_field(name="Time", value=f"''{time}''", inline=True)
         channel = await interaction.user.create_dm()
         await channel.send(file=file)
         os.remove(f"Data/Keys{interaction.user.display_name}.txt")
@@ -103,9 +105,9 @@ async def slash3(interaction: discord.Interaction, licence: str):
         embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Redeemed Licence Key!", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
-        embed.add_field(name="Plan", value=res[1], inline=True)
-        embed.add_field(name="Role ID", value=res[2], inline=True)
-        embed.add_field(name="Time", value=res[3], inline=True)
+        embed.add_field(name="Plan", value=f"''{res[1]}''", inline=True)
+        embed.add_field(name="Role ID", value=f"''{res[2]}''", inline=True)
+        embed.add_field(name="Time", value=f"''{date}''", inline=True)
         await interaction.user.add_roles(role)
         await interaction.response.send_message(embed=embed)
     else:
@@ -122,10 +124,10 @@ async def slash3(interaction: discord.Interaction, userid: str):
         embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Found User", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
-        embed.add_field(name="Plan", value=res[1], inline=True)
-        embed.add_field(name="Username", value=res[0], inline=True)
-        embed.add_field(name="Role ID", value=res[2], inline=True)
-        embed.add_field(name="Time", value=res[3], inline=True)
+        embed.add_field(name="Plan", value=f"''{res[1]}''", inline=True)
+        embed.add_field(name="Username", value=f"''{res[0]}''", inline=True)
+        embed.add_field(name="Role ID", value=f"''{res[2]}''", inline=True)
+        embed.add_field(name="Time", value=f"''{res[3]}''", inline=True)
         await interaction.response.send_message(embed=embed)
     else:
         embed = discord.Embed(title="Aztec Licence Handler", description="User Not **Found**", colour=discord.Colour(0xfa8c68))
