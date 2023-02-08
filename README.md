@@ -1,5 +1,5 @@
 # Aztec Licence Manager
-A bot for Discord that helps you manage roles and licence keys with expiration dates.
+Aztec Licence Manager is a powerful tool for managing your licenses and keys. With this tool, you can generate keys with expiration times, redeem keys that will automatically be removed after their expiration time has been reached, and easily check your information with just a few clicks..
 
 # Usage
 Here are the commands you can use with this bot:
