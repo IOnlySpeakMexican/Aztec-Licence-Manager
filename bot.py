@@ -1,4 +1,3 @@
-
 import discord
 from discord import  Guild, Interaction, Role, ui, app_commands
 from datetime import datetime
@@ -8,12 +7,17 @@ import sqlite3
 import datetime
 from discord.ext import commands, tasks
 import discord
+from datetime import *
+import random
+import os
+import string
 from discord.utils import get
 connection = sqlite3.connect("Users.db")
 cur = connection.cursor()
 connection.row_factory = lambda cursor, row: row[0]
 intents = discord.Intents.all()  
 intents.members = True
+
 
 class client(discord.Client):
     def __init__(self) -> None:
@@ -22,94 +26,106 @@ class client(discord.Client):
     async def on_ready(self):
         await self.wait_until_ready()
         if not self.synced:
-            await tree.sync(guild = discord.Object(id=YOUSERVERIDHERE))
+            await tree.sync(guild = discord.Object(id=YOURSERVERIDHERE))
             self.synced = True
-        print("Logged on")
         license_check.start()
+        print("Logged on")
 
-class addkey(ui.Modal, title="Licence Generation"):
-    amount = ui.TextInput(label="Amount", style=discord.TextStyle.short, placeholder="Amount of keys to generate.", required = True, max_length=50)
-    role = ui.TextInput(label="Role ID", style=discord.TextStyle.short, placeholder="The role ID you wish to be linked to key", required = True, max_length=50)
-    timee = ui.TextInput(label="Time", style=discord.TextStyle.short, placeholder="Time till expire (year-month-day)", required = True, max_length=50)
-    async def on_submit(self, interaction: discord.Interaction):
-        for val in range(int(self.amount.value)):
-            key = f"{secrets.token_hex(4)}-{secrets.token_hex(4)}-{secrets.token_hex(4)}"
-            cur.execute(f"INSERT INTO Keys (Key, Exipry, Role) VALUES ('{key}', '{self.timee}', '{self.role}')")
-            connection.commit()
-            await interaction.user.send(key)
-        embed = discord.Embed(title="Howl Licence Manager", description="```Successfully Created Licence Keys```")
-        embed.add_field(name="Expire Date", value=f"``{self.timee}``", inline=True)
-        embed.add_field(name="Amount", value=f"``{self.amount}``", inline=True)
-        await interaction.response.send_message(embed=embed)
 
-class claimkey(ui.Modal, title="Licence Redemption"):
-    key = ui.TextInput(label="Licence", style=discord.TextStyle.short, placeholder="Licence key to be redeemed", required = True, max_length=50)
-    async def on_submit(self, interaction: discord.Interaction):
-        resule = cur.execute(f"SELECT * FROM Keys WHERE Keys.Key = '{self.key}'")
-        data = cur.fetchone()
-        if data:
-            query = cur.execute(f"DELETE FROM Keys WHERE Keys.Key = '{self.key}'")
-            cur.execute(f"INSERT INTO Users (Licence, User, Role, Expires) VALUES ('{self.key}','{interaction.user.id}', '{data[2]}', '{data[1]}')")
-            role = interaction.guild.get_role(data[2])
-            await interaction.user.add_roles(role)
-            connection.commit()
-            embed = discord.Embed(title="Howl Licence Manager", description="```Successfully Redeemed Licence Key```")
-            embed.add_field(name="Expire Date", value=f"``{data[1]}``", inline=True)
-            embed.add_field(name="Role", value=f"``<@{data[2]}>``", inline=True)
-            await interaction.response.send_message(embed=embed)
-        else:
-            embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found```")
-            await interaction.response.send_message(embed=embed)
-
+def generate_Licence(plan, RoleID, Time):
+    licence = f"AZTEC-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}"
+    cur.execute(f"INSERT INTO Keys (Licence, Plan, RoleID, Time) VALUES ('{licence}','{plan}','{RoleID}','{Time}')")
+    connection.commit()
+    return licence
 
 @tasks.loop(seconds=10.0)
 async def license_check():
-    cur.execute(f"SELECT * FROM Users WHERE Users.Expires = '{datetime.date.today()}'")
-    res = cur.fetchone()
+    res = cur.execute(f"SELECT * FROM Users WHERE Users.Expire = '{datetime.now().strftime('%d-%m-%Y')}'")
+    res = res.fetchone()
     if res:
-        guild = aclient.get_guild(YOUSERVERIDHERE)
-        member = guild.get_member(int(res[1]))
-        print(res[2])
-        role = get(guild.roles, id=int(res[2]))
-        await member.remove_roles(role)
-        cur.execute(f"DELETE FROM Users WHERE Users.Licence = '{res[0]}'")
+        cur.execute(f"DELETE FROM Users WHERE Users.Userid = '{int(res[1])}'")
         connection.commit()
+        guild = aclient.get_guild(YOURSERVERIDHERE)
+        member = guild.get_member(int(res[1]))
+        role = get(guild.roles, id=int(res[3]))
+        await member.remove_roles(role)
+        print("Removed User: " + res[0])
     else:
-        cur.execute(f"SELECT * FROM Keys WHERE Keys.Exipry = '{datetime.date.today()}'")
-        ress = cur.fetchone()
-        if ress:
-            cur.execute(f"DELETE FROM Keys WHERE Keys.Exipry = '{datetime.date.today()}'")
-            connection.commit()
-            print("deleted from key table")
+        print("Removed No Users")
 
 
 aclient = client()
 tree = app_commands.CommandTree(aclient)
 
-@tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "generate", description="Brings up generation prompt")
-@app_commands.checks.has_permissions()
-async def generate(interaction: discord.Interaction):
-    await interaction.response.send_modal(addkey())
+@tree.command(guild = discord.Object(id=YOURSERVERIDHERE), name = 'generate', description='Generate Licence Keys') 
+async def slash3(interaction: discord.Interaction, plan: str, amount: int, roleid: str, time: int): 
+    role = discord.utils.find(lambda r: r.name == 'Owner', interaction.guild.roles)
+    if role in interaction.user.roles:
+        open(f"Data/Keys{interaction.user.display_name}.txt", "x", encoding="utf-8").close()
+        with open(f"Data/Keys{interaction.user.display_name}.txt", "r+", encoding="utf-8") as f2:
+            for i in range(int(amount)):
+                Licence = generate_Licence(plan,roleid,time)
+                f2.write(f"{Licence}\n")
+        file = discord.File(f"Data/Keys{interaction.user.display_name}.txt", filename=f"Data/Keys{interaction.user.display_name}.txt")
+        embed = discord.Embed(title="Aztec Licence Handler", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.add_field(name="Plan", value=plan, inline=True)
+        embed.add_field(name="Amount", value=amount, inline=True)
+        embed.add_field(name="Role ID", value=roleid, inline=True)
+        embed.add_field(name="Time", value=time, inline=True)
+        channel = await interaction.user.create_dm()
+        await channel.send(file=file)
+        os.remove(f"Data/Keys{interaction.user.display_name}.txt")
+        await interaction.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title="Aztec Licence Handler", description="**Invalid** Permissions", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await interaction.response.send_message(embed=embed)
 
-@tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "redeem", description="Brings up redmeption prompt")
-async def redeem(interaction: discord.Interaction):
-    await interaction.response.send_modal(claimkey())
+@tree.command(guild = discord.Object(id=YOURSERVERIDHERE), name = 'redeem', description='Redeem Licence Key') 
+async def slash3(interaction: discord.Interaction, licence: str): 
+    res = cur.execute(f"SELECT * FROM Keys WHERE Keys.Licence = '{licence}'")
+    res = res.fetchone()
+    if res:
+        date = datetime.now() + timedelta(days=int(res[3]))
+        date = date.strftime('%d-%m-%Y')
+        cur.execute(f"DELETE FROM Keys WHERE Keys.Licence = '{licence}'")
+        cur.execute(f"INSERT INTO Users (Username,UserID,Plan,RoleID,Expire) VALUES ('{interaction.user.display_name}','{interaction.user.id}','{res[1]}','{res[2]}','{date}')")
+        connection.commit()
+        role = discord.utils.get(interaction.user.guild.roles, id=int(res[2]))
+        embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Redeemed Licence Key!", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.add_field(name="Plan", value=res[1], inline=True)
+        embed.add_field(name="Role ID", value=res[2], inline=True)
+        embed.add_field(name="Time", value=res[3], inline=True)
+        await interaction.user.add_roles(role)
+        await interaction.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title="Aztec Licence Handler", description="Licence Key Not **Found**", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await interaction.response.send_message(embed=embed)
 
-@tree.command(guild = discord.Object(id=YOUSERVERIDHERE), name = "expiration", description="Brings up expiration prompt")
-async def expiration(interaction: discord.Interaction):
-        resule = cur.execute(f"SELECT * FROM Users WHERE Users.User = '{interaction.user.id}'")
-        data = cur.fetchone()
-        if data:
-            embed = discord.Embed(title="Howl Licence Manager", description="```Successfully Found Licence Key```")
-            embed.add_field(name="Expire Date", value=f"``{data[3]}``", inline=True)
-            embed.add_field(name="Role", value=f"``<@{data[1]}>``", inline=True)
-            await interaction.response.send_message(embed=embed)
-        else:
-            embed = discord.Embed(title="Howl Licence Manager", description="```Licence Key Was Not Found For You```")
-            await interaction.response.send_message(embed=embed)
-
+@tree.command(guild = discord.Object(id=YOURSERVERIDHERE), name = 'info', description='Get User Info') 
+async def slash3(interaction: discord.Interaction, userid: str): 
+    res = cur.execute(f"SELECT * FROM Users WHERE Users.UserID = '{userid}'")
+    res = res.fetchone()
+    if res:
+        embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Found User", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.add_field(name="Plan", value=res[1], inline=True)
+        embed.add_field(name="Username", value=res[0], inline=True)
+        embed.add_field(name="Role ID", value=res[2], inline=True)
+        embed.add_field(name="Time", value=res[3], inline=True)
+        await interaction.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title="Aztec Licence Handler", description="User Not **Found**", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await interaction.response.send_message(embed=embed)
 
 aclient.run("")
-
-
-
