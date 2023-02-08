@@ -1,17 +1,14 @@
-# Howl-Licence-Manager
-Discord.py 2.0 bot used for managing roles / licence keys with expire dates
+# Howl Licence Manager
+A bot for Discord that helps you manage roles and licence keys with expiration dates.
 
+# Usage
+Here are the commands you can use with this bot:
 
+``/redeem - This requires one argument, a licence key. Use this to redeem a licence key.``
 
-Usage:
+``/generate - This requires three arguments: the amount of keys to generate, the role ID, and the time (1 = 1 day). Use this to generate licence keys``
 
-``/redeem - requires one variable (Licence) | Redeems Licence Keys``
+``/info - This requires one argument, a user ID. Use this to get all the information about a user.``
 
-
-``/generate requires three variables (Amount, Role ID and Time(1 = 1 Day)) | Generates Licence Keys``
-
-
-``/info - requires one variable (User ID) | Returns All The User Info``
-
-
-Inside bot.py there will be three server ids located on lines 87, 91, 25 and 68. Change those to your server ID.
+# Note
+Open the config file and input your discord bot token, server id and designated admin role.
