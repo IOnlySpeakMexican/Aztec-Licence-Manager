@@ -11,12 +11,17 @@ from datetime import *
 import random
 import os
 import string
+import json
 from discord.utils import get
+
 connection = sqlite3.connect("Users.db")
 cur = connection.cursor()
 connection.row_factory = lambda cursor, row: row[0]
 intents = discord.Intents.all()  
 intents.members = True
+
+with open('config.json') as config_file:
+    data = json.load(config_file)
 
 
 class client(discord.Client):
@@ -26,7 +31,7 @@ class client(discord.Client):
     async def on_ready(self):
         await self.wait_until_ready()
         if not self.synced:
-            await tree.sync(guild = discord.Object(id=YOURSERVERIDHERE))
+            await tree.sync(guild = discord.Object(id=int(data["ServerID"])))
             self.synced = True
         license_check.start()
         print("Logged on")
@@ -45,7 +50,7 @@ async def license_check():
     if res:
         cur.execute(f"DELETE FROM Users WHERE Users.Userid = '{int(res[1])}'")
         connection.commit()
-        guild = aclient.get_guild(YOURSERVERIDHERE)
+        guild = aclient.get_guild(int(data["ServerID"]))
         member = guild.get_member(int(res[1]))
         role = get(guild.roles, id=int(res[3]))
         await member.remove_roles(role)
@@ -57,9 +62,9 @@ async def license_check():
 aclient = client()
 tree = app_commands.CommandTree(aclient)
 
-@tree.command(guild = discord.Object(id=YOURSERVERIDHERE), name = 'generate', description='Generate Licence Keys') 
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'generate', description='Generate Licence Keys') 
 async def slash3(interaction: discord.Interaction, plan: str, amount: int, roleid: str, time: int): 
-    role = discord.utils.find(lambda r: r.name == 'Owner', interaction.guild.roles)
+    role = discord.utils.find(lambda r: r.name == data["AdminRole"], interaction.guild.roles)
     if role in interaction.user.roles:
         open(f"Data/Keys{interaction.user.display_name}.txt", "x", encoding="utf-8").close()
         with open(f"Data/Keys{interaction.user.display_name}.txt", "r+", encoding="utf-8") as f2:
@@ -84,7 +89,7 @@ async def slash3(interaction: discord.Interaction, plan: str, amount: int, rolei
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await interaction.response.send_message(embed=embed)
 
-@tree.command(guild = discord.Object(id=YOURSERVERIDHERE), name = 'redeem', description='Redeem Licence Key') 
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'redeem', description='Redeem Licence Key') 
 async def slash3(interaction: discord.Interaction, licence: str): 
     res = cur.execute(f"SELECT * FROM Keys WHERE Keys.Licence = '{licence}'")
     res = res.fetchone()
@@ -109,7 +114,7 @@ async def slash3(interaction: discord.Interaction, licence: str):
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await interaction.response.send_message(embed=embed)
 
-@tree.command(guild = discord.Object(id=YOURSERVERIDHERE), name = 'info', description='Get User Info') 
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'info', description='Get User Info') 
 async def slash3(interaction: discord.Interaction, userid: str): 
     res = cur.execute(f"SELECT * FROM Users WHERE Users.UserID = '{userid}'")
     res = res.fetchone()
@@ -128,4 +133,4 @@ async def slash3(interaction: discord.Interaction, userid: str):
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await interaction.response.send_message(embed=embed)
 
-aclient.run("")
+aclient.run(data["Token"])
