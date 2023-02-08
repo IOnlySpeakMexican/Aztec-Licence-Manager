@@ -1,4 +1,4 @@
-# Howl Licence Manager
+# Aztec Licence Manager
 A bot for Discord that helps you manage roles and licence keys with expiration dates.
 
 # Usage
