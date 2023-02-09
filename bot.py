@@ -35,13 +35,13 @@ class client(discord.Client):
         print("Logged on")
 
 
-def generate_Licence(plan, RoleID, Time):
+def generate_Licence(plan, RoleID, Time, Hours):
     licence = f"AZTEC-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}"
-    cur.execute(f"INSERT INTO Keys (Licence, Plan, RoleID, Time) VALUES ('{licence}','{plan}','{RoleID}','{Time}')")
+    cur.execute(f"INSERT INTO Keys (Licence, Plan, RoleID, Days, Hours) VALUES ('{licence}','{plan}','{RoleID}','{Time}','{Hours}')")
     connection.commit()
     return licence
 
-@tasks.loop(seconds=360.0)
+@tasks.loop(seconds=50.0)
 async def slot_check():
     res = cur.execute(f"SELECT * FROM Slots WHERE Slots.ShopTime = '{datetime.now().strftime('%d-%m-%Y')}'")
     res = res.fetchone()
@@ -59,9 +59,9 @@ async def slot_check():
     else:
         print("Removed No Shop")
 
-@tasks.loop(seconds=360.0)
+@tasks.loop(seconds=50.0)
 async def license_check():
-    res = cur.execute(f"SELECT * FROM Users WHERE Users.Expire = '{datetime.now().strftime('%d-%m-%Y')}'")
+    res = cur.execute(f"SELECT * FROM Users WHERE Users.Expire = '{datetime.now().strftime('%d-%m-%Y-%H')}'")
     res = res.fetchone()
     if res:
         cur.execute(f"DELETE FROM Users WHERE Users.Userid = '{int(res[1])}'")
@@ -84,26 +84,32 @@ aclient = client()
 tree = app_commands.CommandTree(aclient)
 
 @tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'generate', description='Generate Licence Keys') 
-async def slash3(interaction: discord.Interaction, plan: str, amount: int, roleid: str, time: int): 
+async def slash3(interaction: discord.Interaction, plan: str, amount: int, roleid: str, days: int, hours: str): 
     role = discord.utils.find(lambda r: r.name == data["AdminRole"], interaction.guild.roles)
     if role in interaction.user.roles:
         open(f"Data/Keys{interaction.user.display_name}.txt", "x", encoding="utf-8").close()
         with open(f"Data/Keys{interaction.user.display_name}.txt", "r+", encoding="utf-8") as f2:
             for i in range(int(amount)):
-                Licence = generate_Licence(plan,roleid,time)
+                Licence = generate_Licence(plan,roleid,days,hours)
                 f2.write(f"{Licence}\n")
         file = discord.File(f"Data/Keys{interaction.user.display_name}.txt", filename=f"Data/Keys{interaction.user.display_name}.txt")
+        date = datetime.now() + timedelta(days=int(days), hours=int(hours))
+        date = date.strftime('%d-%m-%Y-%H')
         embed = discord.Embed(title="Aztec Licence Handler", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.add_field(name="Plan", value=f"``{plan}``", inline=True)
         embed.add_field(name="Amount", value=f"``{amount}``", inline=True)
         embed.add_field(name="Role ID", value=f"``{roleid}``", inline=True)
-        embed.add_field(name="Time", value=f"``{time} Day``", inline=True)
+        embed.add_field(name="Expiration", value=f"``In {days} Days And {hours} Hours``", inline=True)
         channel = await interaction.user.create_dm()
+        await interaction.response.send_message(embed=embed)
+        embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Generated License Keys!", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await channel.send(embed=embed)
         await channel.send(file=file)
         os.remove(f"Data/Keys{interaction.user.display_name}.txt")
-        await interaction.response.send_message(embed=embed)
     else:
         embed = discord.Embed(title="Aztec Licence Handler", description="**Invalid** Permissions", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
@@ -115,8 +121,8 @@ async def slash3(interaction: discord.Interaction, licence: str):
     res = cur.execute(f"SELECT * FROM Keys WHERE Keys.Licence = '{licence}'")
     res = res.fetchone()
     if res:
-        date = datetime.now() + timedelta(days=int(res[3]))
-        date = date.strftime('%d-%m-%Y')
+        date = datetime.now() + timedelta(days=int(res[3]), hours=int(res[4]))
+        date = date.strftime('%d-%m-%Y-%H')
         cur.execute(f"DELETE FROM Keys WHERE Keys.Licence = '{licence}'")
         cur.execute(f"INSERT INTO Users (Username,UserID,Plan,RoleID,Expire) VALUES ('{interaction.user.display_name}','{interaction.user.id}','{res[1]}','{res[2]}','{date}')")
         connection.commit()
@@ -171,11 +177,11 @@ async def slash3(interaction: discord.Interaction, userid: str, shopname: str, s
         channelid = channel.id
         cur.execute(f"INSERT INTO Slots (UserID,ShopName,ShopTime,ChannelID) VALUES ('{userid}','{shopname}','{date}','{channelid}')")
         connection.commit()
-        embed = discord.Embed(title="Aztec Slot Handler", description=f"``Your Slot Has Begun 1 Ping / 24 Hours. This Channel Will Be Deleted In {shoptime} Days``", colour=discord.Colour(0xfa8c68))
+        embed = discord.Embed(title="Aztec Slot Handler", description=f"Your Slot Has Begun 1 Ping / 24 Hours. This Channel Will Be Deleted On **{date}**", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await channel.send(embed=embed)
-        embed = discord.Embed(title="Aztec Slot Handler", description=f"``The Slot Was Created Successfully``", colour=discord.Colour(0xfa8c68))
+        embed = discord.Embed(title="Aztec Slot Handler", description=f"The Slot Was Created **Successfully**", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.add_field(name="Shop Name", value=f"``{shopname}``", inline=True)
