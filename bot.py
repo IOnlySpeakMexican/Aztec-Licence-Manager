@@ -143,19 +143,26 @@ async def slash3(interaction: discord.Interaction, licence: str):
 
 @tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'info', description='Get User Info') 
 async def slash3(interaction: discord.Interaction, userid: str): 
-    res = cur.execute(f"SELECT * FROM Users WHERE Users.UserID = '{userid}'")
-    res = res.fetchone()
-    if res:
-        embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Found User", colour=discord.Colour(0xfa8c68))
-        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
-        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
-        embed.add_field(name="Plan", value=f"``{res[1]}``", inline=True)
-        embed.add_field(name="Username", value=f"``{res[0]}``", inline=True)
-        embed.add_field(name="Role ID", value=f"``{res[2]}``", inline=True)
-        embed.add_field(name="Time", value=f"``{res[3]}``", inline=True)
-        await interaction.response.send_message(embed=embed)
+    role = discord.utils.find(lambda r: r.name == data["AdminRole"], interaction.guild.roles)
+    if role in interaction.user.roles:
+        res = cur.execute(f"SELECT * FROM Users WHERE Users.UserID = '{userid}'")
+        res = res.fetchone()
+        if res:
+            embed = discord.Embed(title="Aztec Licence Handler", description="**Successfully** Found User", colour=discord.Colour(0xfa8c68))
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.add_field(name="Plan", value=f"``{res[1]}``", inline=True)
+            embed.add_field(name="Username", value=f"``{res[0]}``", inline=True)
+            embed.add_field(name="Role ID", value=f"``{res[2]}``", inline=True)
+            embed.add_field(name="Time", value=f"``{res[4]}``", inline=True)
+            await interaction.response.send_message(embed=embed)
+        else:
+            embed = discord.Embed(title="Aztec Licence Handler", description="User Not **Found**", colour=discord.Colour(0xfa8c68))
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            await interaction.response.send_message(embed=embed)
     else:
-        embed = discord.Embed(title="Aztec Licence Handler", description="User Not **Found**", colour=discord.Colour(0xfa8c68))
+        embed = discord.Embed(title="Aztec Slot Handler", description="**Invalid** Permissions", colour=discord.Colour(0xfa8c68))
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await interaction.response.send_message(embed=embed)
