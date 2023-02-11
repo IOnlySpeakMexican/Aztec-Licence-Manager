@@ -193,5 +193,72 @@ async def slash3(interaction: discord.Interaction, userid: str, shopname: str, s
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await interaction.response.send_message(embed=embed)
     
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'addtime', description='Adds more time to a users key') 
+async def slash3(interaction: discord.Interaction, userid: str, days: int, hours: int): 
+    role = discord.utils.find(lambda r: r.name == data["AdminRole"], interaction.guild.roles)
+    if role in interaction.user.roles:
+        res = cur.execute(f"SELECT * FROM Users WHERE Users.UserID = '{userid}'")
+        res = res.fetchone()
+        if res:
+            expire = str(res[4]).split("-")
+            day = int(expire[0])
+            month = int(expire[1])
+            year = int(expire[2])
+            hour = int(expire[3])
+
+            hour = hour + int(hours)
+            day = day + int(days)
+
+            finaltime = f"{day}-{month}-{year}-{hour}"
+            cur.execute(f"UPDATE Users SET Expire = '{finaltime}' WHERE Users.UserID = '{userid}'")
+            connection.commit()
+            embed = discord.Embed(title="Aztec Slot Handler", description=f"**Successfully** added more time to <@{userid}>", colour=discord.Colour(0xfa8c68))
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            await interaction.response.send_message(embed=embed)
+        else:
+            embed = discord.Embed(title="Aztec Slot Handler", description="User id not **Found**", colour=discord.Colour(0xfa8c68))
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            await interaction.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title="Aztec Slot Handler", description="**Invalid** Permissions", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await interaction.response.send_message(embed=embed)
+
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'removetime', description='Removes time from a users key') 
+async def slash3(interaction: discord.Interaction, userid: str, days: int, hours: int): 
+    role = discord.utils.find(lambda r: r.name == data["AdminRole"], interaction.guild.roles)
+    if role in interaction.user.roles:
+        res = cur.execute(f"SELECT * FROM Users WHERE Users.UserID = '{userid}'")
+        res = res.fetchone()
+        if res:
+            expire = str(res[4]).split("-")
+            day = int(expire[0])
+            month = int(expire[1])
+            year = int(expire[2])
+            hour = int(expire[3])
+
+            hour = hour - int(hours)
+            day = day - int(days)
+
+            finaltime = f"{day}-{month}-{year}-{hour}"
+            cur.execute(f"UPDATE Users SET Expire = '{finaltime}' WHERE Users.UserID = '{userid}'")
+            connection.commit()
+            embed = discord.Embed(title="Aztec Slot Handler", description=f"**Successfully** removed time from <@{userid}> key", colour=discord.Colour(0xfa8c68))
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            await interaction.response.send_message(embed=embed)
+        else:
+            embed = discord.Embed(title="Aztec Slot Handler", description="User id not **Found**", colour=discord.Colour(0xfa8c68))
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+            await interaction.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title="Aztec Slot Handler", description="**Invalid** Permissions", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        await interaction.response.send_message(embed=embed)
 
 aclient.run(data["Token"])
