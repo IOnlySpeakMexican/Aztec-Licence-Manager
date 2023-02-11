@@ -10,7 +10,11 @@ Here are the commands you can use with this bot:
 
 ``/info - This requires one argument, a user ID. Use this to get all the information about a user.``
 
-``/createslot - This Requires three arguements, a user ID, Slot Name, Shop Time(1 = 1 Day). Use this to create a slot that will automatically delete over time.``
+``/createslot - This requires three arguements, a user ID, Slot Name, Shop Time(1 = 1 Day). Use this to create a slot that will automatically delete over time.``
+
+``/addtime - This requires three argurements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to add more time to a users whitelist``
+
+``/removetime - This requires three argurements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to remove time from a users whitelist``
 
 # Note
 Open the config file and input your discord bot token, server id and designated admin role.
