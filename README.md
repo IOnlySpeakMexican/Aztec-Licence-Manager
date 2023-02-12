@@ -18,7 +18,7 @@ Here are the commands you can use with this bot:
 
 ``/ticket - This requires one arguement, a user ID. Use this to create a ticket``
 
-``/close - This requires no arguement. Use this to close a ticket
+``/close - This requires no arguement. Use this to close a ticket``
 
 # Note
 Open the config file and input your discord bot token, server id and designated admin role.
