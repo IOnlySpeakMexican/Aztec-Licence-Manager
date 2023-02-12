@@ -16,7 +16,7 @@ Here are the commands you can use with this bot:
 
 ``/removetime - This requires three arguements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to remove time from a users whitelist``
 
-``/ticket - This requires one arguement, a user ID. Use this to create a ticket``
+``/ticket - This requires one arguement, a reason. Use this to create a ticket``
 
 ``/close - This requires no arguement. Use this to close a ticket``
 
