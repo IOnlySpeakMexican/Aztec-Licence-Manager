@@ -268,4 +268,50 @@ async def slash3(interaction: discord.Interaction, userid: str, days: int, hours
         embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
         await interaction.response.send_message(embed=embed)
 
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'ticket', description='Creates a ticket with server admins and the user') 
+async def slash3(interaction: discord.Interaction, reason: str):
+    userid = interaction.user.id
+    guild = aclient.get_guild(int(data["ServerID"]))
+    user = guild.get_member(int(userid))
+    category = discord.utils.get(guild.categories, id=data["CateogryIDD"])
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(send_messages=False, view_channel=True,read_messages=False),
+        user: discord.PermissionOverwrite(send_messages=True, mention_everyone=True)
+    }
+    channel = await guild.create_text_channel(name=f"🎫┃ {interaction.user.name}-Ticket", category=category,overwrites=overwrites)
+    channelid = channel.id
+    cur.execute(f"INSERT INTO Tickets (UserID,TicketID) VALUES ('{userid}','{channelid}')")
+    connection.commit()
+    embed = discord.Embed(title="Aztec Ticket Handler", description=f"Your ticket has been created wait for an admin!\nIf you want to close to ticket type /close", colour=discord.Colour(0xfa8c68))
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+    embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+    await channel.send(embed=embed)
+    embed = discord.Embed(title="Aztec Ticket Handler", description=f"Your ticket was created **Successfully**", colour=discord.Colour(0xfa8c68))
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+    embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(guild = discord.Object(id=int(data["ServerID"])), name = 'close', description='Closes a ticket') 
+async def slash3(interaction: discord.Interaction):
+    channelid = interaction.channel_id
+    userid = interaction.user.id
+    res = cur.execute(f"SELECT * FROM Tickets WHERE Tickets.UserID = '{userid}'")
+    res = res.fetchone()
+    if res:
+        cur.execute(f"DELETE FROM Tickets WHERE Tickets.UserID = '{userid}'")
+        connection.commit()
+        guild = aclient.get_guild(int(data["ServerID"]))
+        channel = guild.get_channel(channelid)
+        await channel.delete()
+        embed = discord.Embed(title="Aztec Ticket Handler", description="**Successfully** Closed Ticket", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        channel = await interaction.user.create_dm()
+        await channel.send(embed=embed)
+    else:
+        embed = discord.Embed(title="Aztec Ticket Handler", description="Ticket Not **Found**", colour=discord.Colour(0xfa8c68))
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+        embed.set_footer(text="Aztec", icon_url="https://cdn.discordapp.com/attachments/988618112024871004/1072739850018639912/pngtree-a-logo-simple-and-minimalistic-image_301991.png")
+
+
 aclient.run(data["Token"])
