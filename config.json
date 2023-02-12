@@ -1,9 +1,11 @@
 {
     "Token": "",
-    "ServerID": 111111,
-    
-    "COMMENT": "This id is the id you want slots to be created in!",
-    "CateogryID": 111111,
+    "ServerID": 111,
+
+    "COMMENT": "This id is the category you want slots to be created in!",
+    "CateogryID": 111,
+    "COMMENTT": "This id is the category you want tickets to be created in!",
+    "CateogryIDD": 1111,
 
     "AdminRole": "Owner"
 }
