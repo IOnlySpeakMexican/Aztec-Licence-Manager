@@ -12,9 +12,13 @@ Here are the commands you can use with this bot:
 
 ``/createslot - This requires three arguements, a user ID, Slot Name, Shop Time(1 = 1 Day). Use this to create a slot that will automatically delete over time.``
 
-``/addtime - This requires three argurements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to add more time to a users whitelist``
+``/addtime - This requires three arguements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to add more time to a users whitelist``
 
-``/removetime - This requires three argurements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to remove time from a users whitelist``
+``/removetime - This requires three arguements, a user ID, Days (1 = 1 Day), Hours (1 = 1 Hour). Use this to remove time from a users whitelist``
+
+``/ticket - This requires one arguement, a user ID. Use this to create a ticket``
+
+``/close - This requires no arguement. Use this to close a ticket
 
 # Note
 Open the config file and input your discord bot token, server id and designated admin role.
